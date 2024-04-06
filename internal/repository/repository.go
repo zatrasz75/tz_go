@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 	"zatrasz75/tz_go/models"
@@ -16,6 +17,54 @@ type Store struct {
 
 func New(pg *postgres.Postgres, l logger.LoggersInterface) *Store {
 	return &Store{pg, l}
+}
+
+// DeleteCarsById Удаление по id
+func (s *Store) DeleteCarsById(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	// Начать транзакцию
+	tx, err := s.Pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("не удалось запустить транзакцию: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	query := "SELECT owner_id FROM cars WHERE id = $1"
+	var ownerId int
+
+	row := tx.QueryRow(ctx, query, id)
+	err = row.Scan(&ownerId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// Если строки пустые
+			return fmt.Errorf("ни одна строка не была возвращена")
+		} else {
+			return fmt.Errorf("не удалось получить owner по идентификатору: %w", err)
+		}
+	}
+
+	// Удаляем автомобиль по его идентификатору
+	deleteCar := "DELETE FROM cars WHERE id = $1"
+	_, err = tx.Exec(ctx, deleteCar, id)
+	if err != nil {
+		return fmt.Errorf("не удалось автомобиль по идентификатору: %w", err)
+	}
+
+	// Удаляем владельца автомобиля
+	deleteOwner := "DELETE FROM people WHERE id = $1"
+	_, err = tx.Exec(ctx, deleteOwner, ownerId)
+	if err != nil {
+		return fmt.Errorf("не удалось удалить владельца автомобиля: %w", err)
+	}
+
+	// Фиксация транзакции
+	err = tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("не удалось зафиксировать транзакцию: %w", err)
+	}
+
+	return nil
 }
 
 // SaveNewCar Сохраняет данные о авто и владельце

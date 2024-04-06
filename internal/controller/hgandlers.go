@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"zatrasz75/tz_go/configs"
 	"zatrasz75/tz_go/internal/repository"
 	"zatrasz75/tz_go/internal/storage"
@@ -24,6 +25,7 @@ func newEndpoint(r *mux.Router, cfg *configs.Config, l logger.LoggersInterface, 
 	en := &api{cfg, l, repo}
 	r.HandleFunc("/", en.home).Methods(http.MethodGet)
 	r.HandleFunc("/cars", en.addCars).Methods(http.MethodPost)
+	r.HandleFunc("/cars/{id}", en.deleteCarsById).Methods(http.MethodDelete)
 }
 
 func (a *api) home(w http.ResponseWriter, _ *http.Request) {
@@ -38,6 +40,37 @@ func (a *api) home(w http.ResponseWriter, _ *http.Request) {
 	if err != nil {
 		http.Error(w, "Ошибка записи на страницу", http.StatusInternalServerError)
 		a.l.Error("Ошибка записи на страницу", err)
+	}
+}
+
+func (a *api) deleteCarsById(w http.ResponseWriter, r *http.Request) {
+	idParam := mux.Vars(r)["id"]
+	if idParam == "" {
+		a.l.Debug("Отсутствует идентификатор в запросе")
+		http.Error(w, "Отсутствует идентификатор в запросе", http.StatusBadRequest)
+		return
+	}
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		a.l.Error("не удалось преобразовать строку в число", err)
+		http.Error(w, "не удалось преобразовать строку в число", http.StatusBadRequest)
+		return
+	}
+
+	err = a.repo.DeleteCarsById(id)
+	if err != nil {
+		a.l.Error("Ошибка при удалении данных", err)
+		http.Error(w, "Ошибка при удалении данных", http.StatusInternalServerError)
+		return
+	}
+	a.l.Info("Данные c id %d успешно удалены", id)
+
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write([]byte("Данные автомобили успешно удалены"))
+	if err != nil {
+		http.Error(w, "ошибка при отправке данных", http.StatusInternalServerError)
+		a.l.Error("ошибка при отправке данных: ", err)
+		return
 	}
 }
 
