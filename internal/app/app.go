@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,7 +13,6 @@ import (
 )
 
 func Run(cfg *configs.Config, l logger.LoggersInterface) {
-	fmt.Println(cfg.DataBase.ConnStr)
 	pg, err := postgres.New(cfg.DataBase.ConnStr, l, postgres.OptionSet(cfg.DataBase.PoolMax, cfg.DataBase.ConnAttempts, cfg.DataBase.ConnTimeout))
 	if err != nil {
 		l.Fatal("ошибка запуска - postgres.New:", err)

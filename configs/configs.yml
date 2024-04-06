@@ -13,3 +13,7 @@ database:
   db-url: localhost
   db-name: clean-tz
   port: 49175
+
+api:
+ # url: http://external-api.com/info?regNum=
+  url: https://api.nationalize.io/?name=

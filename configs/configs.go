@@ -31,6 +31,9 @@ type Config struct {
 		ConnAttempts int           `yaml:"conn-attempts" env:"PG_CONN_ATTEMPTS" env-description:"db ConnAttempts" env-default:"10"`
 		ConnTimeout  time.Duration `yaml:"conn-timeout" env:"PG_TIMEOUT" env-description:"db ConnTimeout" env-default:"2s"`
 	} `yaml:"database"`
+	Api struct {
+		Url string `yaml:"url" env:"API_URL" env-description:"api url"`
+	} `yaml:"api"`
 }
 
 func NewConfig(l logger.LoggersInterface) (*Config, error) {

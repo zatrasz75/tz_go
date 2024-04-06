@@ -9,6 +9,8 @@
 *.dylib
 
 .idea
+app.log
+app.old.log
 
 docker-compose.yml
 
