@@ -1,0 +1,19 @@
+server:
+  host: localhost
+  port: 4141
+  read-timeout: 3s
+  write-timeout: 3s
+  idle-timeout: 6s
+  shutdown-timeout: 10s
+
+database:
+  host: postgres
+  username: postgres
+  password: postgrespw
+  db-url: localhost
+  db-name: clean-tz
+  port: 49175
+
+api:
+ # url: http://external-api.com/info?regNum=
+  url: https://api.nationalize.io/?name=
