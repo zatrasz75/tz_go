@@ -7,4 +7,6 @@ type RepositoryInterface interface {
 	SaveNewCar(car models.Car) error
 	// DeleteCarsById Удаление по id
 	DeleteCarsById(id int) error
+	// UpdateCarsById Изменение одного или нескольких полей по идентификатору
+	UpdateCarsById(car models.Car) error
 }

@@ -1,6 +1,7 @@
 package models
 
 type Car struct {
+	ID     int    `json:"ID"`
 	RegNum string `json:"regNum"`
 	Mark   string `json:"mark"`
 	Model  string `json:"model"`
@@ -9,6 +10,7 @@ type Car struct {
 }
 
 type People struct {
+	ID         int    `json:"ID"`
 	Name       string `json:"name"`
 	Surname    string `json:"surname"`
 	Patronymic string `json:"patronymic"`

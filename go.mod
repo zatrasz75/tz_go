@@ -4,13 +4,17 @@ go 1.22.0
 
 require (
 	github.com/gorilla/mux v1.8.1
+	github.com/h2non/gock v1.2.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jackc/pgx/v4 v4.18.2
 	github.com/joho/godotenv v1.5.1
+	github.com/stretchr/testify v1.8.3
 )
 
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/h2non/parth v0.0.0-20190131123155-b4df798d6542 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.14.3 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
@@ -20,8 +24,8 @@ require (
 	github.com/jackc/pgtype v1.14.0 // indirect
 	github.com/jackc/puddle v1.3.0 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
-	github.com/stretchr/testify v1.8.3 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
