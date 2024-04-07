@@ -2,7 +2,10 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 	"zatrasz75/tz_go/models"
 	"zatrasz75/tz_go/pkg/logger"
@@ -16,6 +19,231 @@ type Store struct {
 
 func New(pg *postgres.Postgres, l logger.LoggersInterface) *Store {
 	return &Store{pg, l}
+}
+
+// GetCarsAndPagination Получение данных с фильтрацией по всем полям и пагинацией
+func (s *Store) GetCarsAndPagination(filter string, page, pageSize int) ([]models.Car, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	// Динамически создаёт SQL-запрос на основе параметров фильтра
+	query := `
+		SELECT c.id, c.regNum, c.mark, c.model, c.year, c.owner_id, p.id, p.name, p.surname, p.patronymic
+		FROM cars c
+		INNER JOIN people p ON c.owner_id = p.id
+		WHERE c.regNum LIKE $1 OR c.mark LIKE $1 OR c.model LIKE $1 OR c.year::text LIKE $1
+		OR p.name LIKE $1 OR p.surname LIKE $1 OR p.patronymic LIKE $1
+		ORDER BY c.id
+		LIMIT $2 OFFSET $3
+	`
+
+	// Запрос с указанным фильтром, размером страницы и смещением.
+	rows, err := s.Pool.Query(ctx, query, "%"+filter+"%", pageSize, (page-1)*pageSize)
+	if err != nil {
+		return nil, fmt.Errorf("не удалось запросить автомобили: %w", err)
+	}
+	defer rows.Close()
+
+	// Сканируем результаты в виде фрагмента структуры автомобиля, включая данные о владельце.
+	var cars []models.Car
+	for rows.Next() {
+		var car models.Car
+		var owner models.People
+		if err = rows.Scan(&car.ID, &car.RegNum, &car.Mark, &car.Model, &car.Year, &car.OwnerID, &owner.ID, &owner.Name, &owner.Surname, &owner.Patronymic); err != nil {
+			return nil, fmt.Errorf("не удалось просканировать строку: %w", err)
+		}
+		car.Owner = owner
+		cars = append(cars, car)
+	}
+
+	// Проверяем, нет ли ошибок при переборе строк
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("ошибка при повторении строк: %w", err)
+	}
+
+	return cars, nil
+}
+
+// UpdateCarsById Изменение одного или нескольких полей по идентификатору
+func (s *Store) UpdateCarsById(car models.Car) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	// Начать транзакцию
+	tx, err := s.Pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("не удалось запустить транзакцию: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Получаем внешний ключ для владельца cars
+	query := "SELECT owner_id FROM cars WHERE id = $1"
+	var ownerId int
+
+	row := tx.QueryRow(ctx, query, car.ID)
+	err = row.Scan(&ownerId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// Если строки пустые
+			return fmt.Errorf("ни одна строка не была возвращена")
+		} else {
+			return fmt.Errorf("не удалось получить owner по идентификатору: %w", err)
+		}
+	}
+
+	// Динамически создаём SQL-запрос для обновления данных cars
+	var queryCar strings.Builder
+	queryCar.Reset()
+	queryCar.WriteString("UPDATE cars SET ")
+	var args []interface{}
+	var argIndex int
+	var fieldsUpdated bool
+
+	if car.RegNum != "" {
+		queryCar.WriteString("regNum = $" + strconv.Itoa(argIndex+1))
+		args = append(args, car.RegNum)
+		argIndex++
+		fieldsUpdated = true
+	}
+	if car.Mark != "" {
+		if fieldsUpdated {
+			queryCar.WriteString(", ")
+		}
+		queryCar.WriteString("mark = $" + strconv.Itoa(argIndex+1))
+		args = append(args, car.Mark)
+		argIndex++
+		fieldsUpdated = true
+	}
+	if car.Model != "" {
+		if fieldsUpdated {
+			queryCar.WriteString(", ")
+		}
+		queryCar.WriteString("model = $" + strconv.Itoa(argIndex+1))
+		args = append(args, car.Model)
+		argIndex++
+		fieldsUpdated = true
+	}
+	if car.Year != 0 {
+		if fieldsUpdated {
+			queryCar.WriteString(", ")
+		}
+		queryCar.WriteString("year = $" + strconv.Itoa(argIndex+1))
+		args = append(args, car.Year)
+		argIndex++
+		fieldsUpdated = true
+	}
+
+	// Добавляем WHERE только в том случае, если какие-либо поля были обновлены
+	if fieldsUpdated {
+		queryCar.WriteString(" WHERE id = $" + strconv.Itoa(argIndex+1))
+		args = append(args, car.ID)
+
+		_, err = tx.Exec(ctx, queryCar.String(), args...)
+		if err != nil {
+			s.l.Error("не удалось обновить автомобиль:", err)
+			return fmt.Errorf("не удалось обновить автомобиль: %w", err)
+		}
+	}
+
+	// Динамически создаём SQL-запрос для обновления данных people
+	var queryOwner strings.Builder
+	queryOwner.Reset()
+	queryOwner.WriteString("UPDATE people SET ")
+	var ownerArgs []interface{}
+	var ownerArgIndex int
+	var ownerFieldsUpdated bool
+
+	if car.Owner.Name != "" {
+		queryOwner.WriteString("name = $" + strconv.Itoa(ownerArgIndex+1))
+		ownerArgs = append(ownerArgs, car.Owner.Name)
+		ownerArgIndex++
+		ownerFieldsUpdated = true
+	}
+	if car.Owner.Surname != "" {
+		if ownerFieldsUpdated {
+			queryOwner.WriteString(", ")
+		}
+		queryOwner.WriteString("surname = $" + strconv.Itoa(ownerArgIndex+1))
+		ownerArgs = append(ownerArgs, car.Owner.Surname)
+		ownerArgIndex++
+		ownerFieldsUpdated = true
+	}
+	if car.Owner.Patronymic != "" {
+		if ownerFieldsUpdated {
+			queryOwner.WriteString(", ")
+		}
+		queryOwner.WriteString("patronymic = $" + strconv.Itoa(ownerArgIndex+1))
+		ownerArgs = append(ownerArgs, car.Owner.Patronymic)
+		ownerArgIndex++
+		ownerFieldsUpdated = true
+	}
+
+	// Добавляем WHERE только в том случае, если какие-либо поля были обновлены
+	if ownerFieldsUpdated {
+		queryOwner.WriteString(" WHERE id = $" + strconv.Itoa(ownerArgIndex+1))
+		ownerArgs = append(ownerArgs, ownerId)
+
+		_, err = tx.Exec(ctx, queryOwner.String(), ownerArgs...)
+		if err != nil {
+			s.l.Error("не удалось обновить владельца:", err)
+			return fmt.Errorf("не удалось обновить владельца: %w", err)
+		}
+	}
+
+	// Фиксация транзакции
+	err = tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("не удалось зафиксировать транзакцию: %w", err)
+	}
+
+	return nil
+}
+
+// DeleteCarsById Удаление по id
+func (s *Store) DeleteCarsById(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+	// Начать транзакцию
+	tx, err := s.Pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("не удалось запустить транзакцию: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	query := "SELECT owner_id FROM cars WHERE id = $1"
+	var ownerId int
+
+	row := tx.QueryRow(ctx, query, id)
+	err = row.Scan(&ownerId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// Если строки пустые
+			return fmt.Errorf("ни одна строка не была возвращена")
+		} else {
+			return fmt.Errorf("не удалось получить owner по идентификатору: %w", err)
+		}
+	}
+
+	// Удаляем автомобиль по его идентификатору
+	deleteCar := "DELETE FROM cars WHERE id = $1"
+	_, err = tx.Exec(ctx, deleteCar, id)
+	if err != nil {
+		return fmt.Errorf("не удалось автомобиль по идентификатору: %w", err)
+	}
+
+	// Удаляем владельца автомобиля
+	deleteOwner := "DELETE FROM people WHERE id = $1"
+	_, err = tx.Exec(ctx, deleteOwner, ownerId)
+	if err != nil {
+		return fmt.Errorf("не удалось удалить владельца автомобиля: %w", err)
+	}
+
+	// Фиксация транзакции
+	err = tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("не удалось зафиксировать транзакцию: %w", err)
+	}
+
+	return nil
 }
 
 // SaveNewCar Сохраняет данные о авто и владельце
