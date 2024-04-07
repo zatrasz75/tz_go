@@ -27,6 +27,7 @@ func newEndpoint(r *mux.Router, cfg *configs.Config, l logger.LoggersInterface, 
 	r.HandleFunc("/cars", en.addCars).Methods(http.MethodPost)
 	r.HandleFunc("/cars/{id}", en.deleteCarsById).Methods(http.MethodDelete)
 	r.HandleFunc("/cars", en.updateCarsById).Methods(http.MethodPatch)
+	r.HandleFunc("/cars", en.getCarsAndPagination).Methods(http.MethodGet)
 }
 
 func (a *api) home(w http.ResponseWriter, _ *http.Request) {
@@ -40,6 +41,47 @@ func (a *api) home(w http.ResponseWriter, _ *http.Request) {
 	if err != nil {
 		http.Error(w, "Ошибка записи на страницу", http.StatusInternalServerError)
 		a.l.Error("Ошибка записи на страницу", err)
+	}
+}
+
+func (a *api) getCarsAndPagination(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+
+	filter := queryParams.Get("filter")
+
+	pageStr := queryParams.Get("page")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		page = 1
+	}
+	pageSizeStr := queryParams.Get("pageSize")
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil {
+		pageSize = 10
+	}
+
+	cars, err := a.repo.GetCarsAndPagination(filter, page, pageSize)
+	if err != nil {
+		a.l.Error("Ошибка при получении данных", err)
+		http.Error(w, "Ошибка при получении данных", http.StatusInternalServerError)
+		return
+	}
+
+	carsJSON, err := json.Marshal(cars)
+	if err != nil {
+		http.Error(w, "ошибка при форматировании данных в JSON", http.StatusInternalServerError)
+		a.l.Error("ошибка при форматировании данных в JSON: ", err)
+		return
+	}
+
+	// Устанавливаем правильный Content-Type для JSON
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(carsJSON)
+	if err != nil {
+		http.Error(w, "ошибка при отправке данных", http.StatusInternalServerError)
+		a.l.Error("ошибка при отправке данных: ", err)
+		return
 	}
 }
 
@@ -126,7 +168,7 @@ func (a *api) addCars(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, regNum := range request.RegNums {
-		carInfo, err := a.getCarInfo(regNum)
+		carInfo, err := a.carInfo(regNum)
 		if err != nil {
 			http.Error(w, "недопустимый текст запроса", http.StatusInternalServerError)
 			a.l.Error("Не удалось расшифровать текст запроса", err)
@@ -153,7 +195,7 @@ func (a *api) addCars(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *api) getCarInfo(regNum string) (models.Car, error) {
+func (a *api) carInfo(regNum string) (models.Car, error) {
 	var car models.Car
 	car.RegNum = regNum
 	url := fmt.Sprintf("%s/%s", a.Cfg.Api.Url, regNum)

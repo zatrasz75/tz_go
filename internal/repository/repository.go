@@ -21,6 +21,49 @@ func New(pg *postgres.Postgres, l logger.LoggersInterface) *Store {
 	return &Store{pg, l}
 }
 
+// GetCarsAndPagination Получение данных с фильтрацией по всем полям и пагинацией
+func (s *Store) GetCarsAndPagination(filter string, page, pageSize int) ([]models.Car, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	// Динамически создаёт SQL-запрос на основе параметров фильтра
+	query := `
+		SELECT c.id, c.regNum, c.mark, c.model, c.year, c.owner_id, p.id, p.name, p.surname, p.patronymic
+		FROM cars c
+		INNER JOIN people p ON c.owner_id = p.id
+		WHERE c.regNum LIKE $1 OR c.mark LIKE $1 OR c.model LIKE $1 OR c.year::text LIKE $1
+		OR p.name LIKE $1 OR p.surname LIKE $1 OR p.patronymic LIKE $1
+		ORDER BY c.id
+		LIMIT $2 OFFSET $3
+	`
+
+	// Запрос с указанным фильтром, размером страницы и смещением.
+	rows, err := s.Pool.Query(ctx, query, "%"+filter+"%", pageSize, (page-1)*pageSize)
+	if err != nil {
+		return nil, fmt.Errorf("не удалось запросить автомобили: %w", err)
+	}
+	defer rows.Close()
+
+	// Сканируем результаты в виде фрагмента структуры автомобиля, включая данные о владельце.
+	var cars []models.Car
+	for rows.Next() {
+		var car models.Car
+		var owner models.People
+		if err = rows.Scan(&car.ID, &car.RegNum, &car.Mark, &car.Model, &car.Year, &car.OwnerID, &owner.ID, &owner.Name, &owner.Surname, &owner.Patronymic); err != nil {
+			return nil, fmt.Errorf("не удалось просканировать строку: %w", err)
+		}
+		car.Owner = owner
+		cars = append(cars, car)
+	}
+
+	// Проверяем, нет ли ошибок при переборе строк
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("ошибка при повторении строк: %w", err)
+	}
+
+	return cars, nil
+}
+
 // UpdateCarsById Изменение одного или нескольких полей по идентификатору
 func (s *Store) UpdateCarsById(car models.Car) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)

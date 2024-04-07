@@ -9,4 +9,6 @@ type RepositoryInterface interface {
 	DeleteCarsById(id int) error
 	// UpdateCarsById Изменение одного или нескольких полей по идентификатору
 	UpdateCarsById(car models.Car) error
+	// GetCarsAndPagination Получение данных с фильтрацией по всем полям и пагинацией
+	GetCarsAndPagination(filter string, page, pageSize int) ([]models.Car, error)
 }
