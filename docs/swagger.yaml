@@ -1,0 +1,160 @@
+basePath: /
+definitions:
+  models.Car:
+    properties:
+      ID:
+        type: integer
+      mark:
+        type: string
+      model:
+        type: string
+      owner:
+        $ref: '#/definitions/models.People'
+      ownerId:
+        type: integer
+      regNum:
+        type: string
+      year:
+        type: integer
+    type: object
+  models.People:
+    properties:
+      ID:
+        type: integer
+      name:
+        type: string
+      patronymic:
+        type: string
+      surname:
+        type: string
+    type: object
+host: localhost:4141
+info:
+  contact:
+    email: zatrasz@ya.ru
+    url: https://t.me/Zatrasz
+  description: ТЗ Go - апрель.
+  title: Swagger API
+  version: "1.0"
+paths:
+  /cars:
+    get:
+      consumes:
+      - application/json
+      description: Получить список автомобилей с возможностью фильтрации и пагинации
+      operationId: get-cars-and-pagination
+      parameters:
+      - description: Фильтр по названию автомобиля
+        in: query
+        name: filter
+        type: string
+      - description: Номер страницы для пагинации
+        in: query
+        name: page
+        type: integer
+      - description: Количество элементов на странице для пагинации
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список автомобилей
+          schema:
+            items:
+              $ref: '#/definitions/models.Car'
+            type: array
+      summary: Получение данных с фильтрацией по всем полям и пагинацией
+    patch:
+      consumes:
+      - application/json
+      description: Изменить данные автомобиля по его идентификатору
+      operationId: update-cars-by-id
+      parameters:
+      - description: Идентификатор автомобиля
+        in: query
+        name: id
+        required: true
+        type: integer
+      - description: Данные автомобиля для обновления
+        in: body
+        name: car
+        required: true
+        schema:
+          $ref: '#/definitions/models.Car'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Данные автомобиля успешно обновлены
+          schema:
+            type: string
+        "400":
+          description: Не удалось проанализировать запрос JSON
+          schema:
+            type: string
+        "500":
+          description: Ошибка при обновлении данных
+          schema:
+            type: string
+      summary: Изменение одного или нескольких полей по идентификатору
+    post:
+      consumes:
+      - application/json
+      description: Добавить в систему несколько автомобилей, используя их номера регистрации
+      operationId: add-cars
+      parameters:
+      - description: Массив номеров регистрации автомобилей
+        in: body
+        name: request.regNums
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Автомобили успешно добавлены
+          schema:
+            type: string
+        "400":
+          description: Неверный формат запроса JSON
+          schema:
+            type: string
+        "500":
+          description: Ошибка при добавлении автомобилей
+          schema:
+            type: string
+      summary: Добавление нескольких автомобилей
+  /cars/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удалить автомобиль по его идентификатору
+      operationId: delete-cars-by-id
+      parameters:
+      - description: Идентификатор автомобиля
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Автомобиль успешно удален
+          schema:
+            type: string
+        "400":
+          description: Неверный идентификатор автомобиля
+          schema:
+            type: string
+        "500":
+          description: Ошибка при удалении автомобиля
+          schema:
+            type: string
+      summary: Удаление автомобиля по идентификатору
+swagger: "2.0"

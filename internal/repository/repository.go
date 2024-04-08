@@ -84,7 +84,7 @@ func (s *Store) UpdateCarsById(car models.Car) error {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// Если строки пустые
-			return fmt.Errorf("ни одна строка не была возвращена")
+			return fmt.Errorf("автомобиль с ID %d не найден", car.ID)
 		} else {
 			return fmt.Errorf("не удалось получить owner по идентификатору: %w", err)
 		}
