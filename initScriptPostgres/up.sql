@@ -1,3 +1,6 @@
+DROP TABLE IF EXISTS cars;
+DROP TABLE IF EXISTS people;
+
 CREATE TABLE IF NOT EXISTS people (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -14,4 +17,3 @@ CREATE TABLE IF NOT EXISTS cars (
     owner_id INTEGER,
     FOREIGN KEY (owner_id) REFERENCES people(id)
 );
-

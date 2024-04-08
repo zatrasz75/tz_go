@@ -4,6 +4,8 @@ import (
 	"zatrasz75/tz_go/configs"
 	"zatrasz75/tz_go/internal/app"
 	"zatrasz75/tz_go/pkg/logger"
+
+	_ "zatrasz75/tz_go/docs"
 )
 
 func main() {
