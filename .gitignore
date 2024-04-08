@@ -14,6 +14,8 @@ app.old.log
 
 docker-compose.yml
 
+localnotes_v1_1_0.exe
+
 # Test binary, built with `go test -c`
 *.test
 
