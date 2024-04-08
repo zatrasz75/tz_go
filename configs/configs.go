@@ -32,7 +32,7 @@ type Config struct {
 		ConnTimeout  time.Duration `yaml:"conn-timeout" env:"PG_TIMEOUT" env-description:"db ConnTimeout" env-default:"2s"`
 	} `yaml:"database"`
 	Api struct {
-		Url string `yaml:"url" env:"API_URL" env-description:"api url"`
+		Url string `yaml:"url" env:"EXTERNAL_API_URL" env-description:"api url"`
 	} `yaml:"api"`
 }
 
