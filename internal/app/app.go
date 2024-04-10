@@ -19,7 +19,7 @@ func Run(cfg *configs.Config, l logger.LoggersInterface) {
 	}
 	defer pg.Close()
 
-	err = pg.Migrate()
+	err = pg.Migrate(l)
 	if err != nil {
 		l.Fatal("ошибка миграции", err)
 	}
@@ -38,6 +38,7 @@ func Run(cfg *configs.Config, l logger.LoggersInterface) {
 	}()
 
 	l.Info("Запуск сервера на http://" + cfg.Server.AddrHost + ":" + cfg.Server.AddrPort)
+	l.Info("Документация Swagger API: http://" + cfg.Server.AddrHost + ":" + cfg.Server.AddrPort + "/swagger/index.html")
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)

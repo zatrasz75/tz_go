@@ -3,12 +3,12 @@ package postgres
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
+	migrate "github.com/rubenv/sql-migrate"
 	"zatrasz75/tz_go/pkg/logger"
 
-	"io/ioutil"
 	"log"
-	"strings"
 	"time"
 )
 
@@ -37,9 +37,14 @@ func New(connStr string, l logger.LoggersInterface, opts ...Option) (*Postgres, 
 	poolConfig.MaxConns = int32(pg.maxPoolSize)
 
 	for pg.connAttempts > 0 {
-		pg.Pool, err = pgxpool.ConnectConfig(context.Background(), poolConfig)
+		pg.Pool, err = pgxpool.NewWithConfig(context.Background(), poolConfig)
 		if err == nil {
-			break
+			// Проверяем, что подключение действительно было установлено
+			err = pg.Pool.Ping(context.Background())
+			if err == nil {
+				// Подключение успешно, выходим из цикла
+				break
+			}
 		}
 		l.Info("Postgres пытается подключиться, попыток осталось: %d", pg.connAttempts)
 
@@ -62,25 +67,20 @@ func (p *Postgres) Close() {
 }
 
 // Migrate Миграция таблиц
-func (p *Postgres) Migrate() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+func (p *Postgres) Migrate(l logger.LoggersInterface) error {
+	// Прочитать миграции из папки:
+	migrations := &migrate.FileMigrationSource{
+		Dir: "migrations",
+	}
 
-	migrationScript, err := ioutil.ReadFile("initScriptPostgres/up.sql")
+	// Преобразование pgxpool.Pool в *sql.DB
+	db := stdlib.OpenDBFromPool(p.Pool)
+
+	n, err := migrate.Exec(db, "postgres", migrations, migrate.Up)
 	if err != nil {
 		log.Fatal(err)
 	}
-	migrationScriptStr := string(migrationScript)
+	l.Info("Применена %d миграция!\n", n)
 
-	statements := strings.Split(migrationScriptStr, ";")
-
-	for _, statement := range statements {
-		if strings.TrimSpace(statement) != "" {
-			_, err = p.Pool.Exec(ctx, statement)
-			if err != nil {
-				return fmt.Errorf("не удалось прочитать сценарий миграции: %w", err)
-			}
-		}
-	}
 	return nil
 }
