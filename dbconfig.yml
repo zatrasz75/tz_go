@@ -1,0 +1,16 @@
+development:
+  dialect: migrations
+  datasource: ${DB_CONNECTION_STRING}
+  dir: migrations
+
+production:
+  dialect: migrations
+  datasource: ${DB_CONNECTION_STRING}
+  dir: migrations
+  table: migrations
+
+# Создать файл миграции
+# sql-migrate new up
+
+# Откатить миграцию на шаг назад
+# sql-migrate down
