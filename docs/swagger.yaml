@@ -28,13 +28,15 @@ definitions:
       surname:
         type: string
     type: object
-host: localhost:4141
 info:
   contact:
     email: zatrasz@ya.ru
+    name: Михаил Токмачев
     url: https://t.me/Zatrasz
-  description: ТЗ Go - апрель.
-  title: Swagger API
+  description: |-
+    ТЗ Go - апрель.
+    https://docs.google.com/document/u/0/d/1c0GEgi0svIsg14aNAfpTgPv9te9tcGoRmE4kngyD0ow/mobilebasic
+  title: Swagger API tz_go
   version: "1.0"
 paths:
   /cars:
@@ -42,9 +44,8 @@ paths:
       consumes:
       - application/json
       description: Получить список автомобилей с возможностью фильтрации и пагинации
-      operationId: get-cars-and-pagination
       parameters:
-      - description: Фильтр по названию автомобиля
+      - description: Фильтр по данным автомобиля или владельца
         in: query
         name: filter
         type: string
@@ -65,12 +66,15 @@ paths:
             items:
               $ref: '#/definitions/models.Car'
             type: array
+        "500":
+          description: Ошибка при получении данных
+          schema:
+            type: string
       summary: Получение данных с фильтрацией по всем полям и пагинацией
     patch:
       consumes:
       - application/json
       description: Изменить данные автомобиля по его идентификатору
-      operationId: update-cars-by-id
       parameters:
       - description: Идентификатор автомобиля
         in: query
@@ -103,7 +107,6 @@ paths:
       consumes:
       - application/json
       description: Добавить в систему несколько автомобилей, используя их номера регистрации
-      operationId: add-cars
       parameters:
       - description: Массив номеров регистрации автомобилей
         in: body

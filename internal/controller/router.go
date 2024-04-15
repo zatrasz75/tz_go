@@ -8,14 +8,15 @@ import (
 	"zatrasz75/tz_go/pkg/logger"
 )
 
-// @title Swagger API
+// @title Swagger API tz_go
 // @version 1.0
 // @description ТЗ Go - апрель.
+// @description https://docs.google.com/document/u/0/d/1c0GEgi0svIsg14aNAfpTgPv9te9tcGoRmE4kngyD0ow/mobilebasic
 
+// @contact.name Михаил Токмачев
 // @contact.url https://t.me/Zatrasz
 // @contact.email zatrasz@ya.ru
 
-// @host localhost:4141
 // @BasePath /
 
 // NewRouter -.

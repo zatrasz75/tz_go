@@ -40,14 +40,15 @@ func newEndpoint(r *mux.Router, cfg *configs.Config, l logger.LoggersInterface, 
 
 // @Summary Получение данных с фильтрацией по всем полям и пагинацией
 // @Description Получить список автомобилей с возможностью фильтрации и пагинации
-// @ID get-cars-and-pagination
 // @Accept json
 // @Produce json
-// @Param filter query string false "Фильтр по названию автомобиля"
+// @Param filter query string false "Фильтр по данным автомобиля или владельца"
 // @Param page query int false "Номер страницы для пагинации"
 // @Param pageSize query int false "Количество элементов на странице для пагинации"
 // @Success 200 {array} models.Car "Список автомобилей"
+// @Failure 500 {string} string "Ошибка при получении данных"
 // @Router /cars [get]
+// @OperationId getCarsAndPagination
 func (a *api) getCarsAndPagination(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 
@@ -91,7 +92,6 @@ func (a *api) getCarsAndPagination(w http.ResponseWriter, r *http.Request) {
 
 // @Summary Добавление нескольких автомобилей
 // @Description Добавить в систему несколько автомобилей, используя их номера регистрации
-// @ID add-cars
 // @Accept json
 // @Produce json
 // @Param request.regNums body []string true "Массив номеров регистрации автомобилей"
@@ -99,6 +99,7 @@ func (a *api) getCarsAndPagination(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {string} string "Неверный формат запроса JSON"
 // @Failure 500 {string} string "Ошибка при добавлении автомобилей"
 // @Router /cars [post]
+// @OperationId addCars
 func (a *api) addCars(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		RegNums []string `json:"regNums"`
@@ -141,7 +142,6 @@ func (a *api) addCars(w http.ResponseWriter, r *http.Request) {
 
 // @Summary Изменение одного или нескольких полей по идентификатору
 // @Description Изменить данные автомобиля по его идентификатору
-// @ID update-cars-by-id
 // @Accept json
 // @Produce json
 // @Param id query int true "Идентификатор автомобиля"
@@ -150,6 +150,7 @@ func (a *api) addCars(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {string} string "Не удалось проанализировать запрос JSON"
 // @Failure 500 {string} string "Ошибка при обновлении данных"
 // @Router /cars [patch]
+// @OperationId updateCarsById
 func (a *api) updateCarsById(w http.ResponseWriter, r *http.Request) {
 	var car models.Car
 

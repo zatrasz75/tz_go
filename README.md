@@ -20,29 +20,33 @@ tags: []
 
 ### **Предварительные требования**
 
-- Перейти на версию 1.16 или более позднюю
+- Перейти на версию Golang 1.16 или более позднюю
 - PostgreSQL 13 или более поздней версии
 
 ### **Установка**
 
- **Клонировать репозиторий**\:
+**Клонировать репозиторий**\:
 
 ```
 git clone https://github.com/zatrasz75/tz_go.git
 cd tz_go
 ```
 
- **Настройка переменных окружения**\:
+**Настройка переменных окружения**\:
 
 Скопируйте `.env.example` файл в `.env` и обновите переменные по мере необходимости:
 
 ```
-APP_IP="localhost"
+APP_IP="0.0.0.0"
 APP_PORT="4141"
 
-DB_CONNECTION_STRING="postgres://postgres:postgrespw@localhost:49175/clean-tz?sslmode=disable"
+POSTGRES_USER="postgres"
+POSTGRES_PASSWORD="postgrespw"
+POSTGRES_DB="clean-tz"
+URL_DB="tz-db"
+PORT_DB="5432"
 
-# Заменить на url внешнего api для обогащение добавленных данных
+# Заменить на url внешнего api для обагащение добавленных данных
 EXTERNAL_API_URL="https://api.agify.io/?name="
 ```
 
@@ -51,6 +55,7 @@ EXTERNAL_API_URL="https://api.agify.io/?name="
 **Настройка Миграции**\:
 
 Файлы для миграции находятся в директории migrations
+
 ```
 # Создать файл миграции
 
@@ -59,7 +64,7 @@ sql-migrate new <имя файла>
 # и отредактировать 
 ```
 
- **Запустите сервис**\:
+**Запустите сервис**\:
 
 ```
 go run ./cmd/main.go
@@ -69,7 +74,21 @@ go run ./cmd/main.go
 
 ### **Документация по API**
 
-После запуска сервиса вы можете получить доступ к пользовательскому интерфейсу Swagger по адресу `http://localhost:4141/swagger/index.html`, чтобы изучить конечные точки API.
+Запуск сервера на <http://localhost:4242>
+
+Документация Swagger API: <http://localhost:4242/swagger/index.html>
+
+### **Или установка в Docker**
+
+```
+docker compose up -d
+```
+
+### **Документация по API**
+
+Запуск сервера на <http://localhost:4242>
+
+Документация Swagger API: <http://localhost:4242/swagger/index.html>
 
 ## **Использование**
 

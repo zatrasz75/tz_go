@@ -3,9 +3,7 @@ package configs
 import (
 	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/joho/godotenv"
 	"time"
-	"zatrasz75/tz_go/pkg/logger"
 )
 
 type Config struct {
@@ -36,20 +34,12 @@ type Config struct {
 	} `yaml:"api"`
 }
 
-func NewConfig(l logger.LoggersInterface) (*Config, error) {
+func NewConfig(path string) (*Config, error) {
 	var cfg Config
 
-	if err := godotenv.Load(); err != nil {
-		l.Warn("системе не удается найти указанный файл .env: - %v", err)
-	}
-	if err := cleanenv.ReadEnv(&cfg); err != nil {
-		l.Error("ошибка .env ", err)
+	if err := cleanenv.ReadConfig(path, &cfg); err != nil {
 		return nil, err
 	}
-	if err := cleanenv.ReadConfig("./configs/configs.yml", &cfg); err != nil {
-		return nil, err
-	}
-
 	cfg.DataBase.ConnStr = initDB(cfg)
 
 	return &cfg, nil
