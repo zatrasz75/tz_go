@@ -1,6 +1,6 @@
 server:
   host: localhost
-  port: 4141
+  port: 4242
   read-timeout: 3s
   write-timeout: 3s
   idle-timeout: 6s

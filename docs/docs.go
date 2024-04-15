@@ -10,6 +10,7 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "contact": {
+            "name": "Михаил Токмачев",
             "url": "https://t.me/Zatrasz",
             "email": "zatrasz@ya.ru"
         },
@@ -28,11 +29,10 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "summary": "Получение данных с фильтрацией по всем полям и пагинацией",
-                "operationId": "get-cars-and-pagination",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Фильтр по названию автомобиля",
+                        "description": "Фильтр по данным автомобиля или владельца",
                         "name": "filter",
                         "in": "query"
                     },
@@ -58,6 +58,12 @@ const docTemplate = `{
                                 "$ref": "#/definitions/models.Car"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Ошибка при получении данных",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             },
@@ -70,7 +76,6 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "summary": "Добавление нескольких автомобилей",
-                "operationId": "add-cars",
                 "parameters": [
                     {
                         "description": "Массив номеров регистрации автомобилей",
@@ -115,7 +120,6 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "summary": "Изменение одного или нескольких полей по идентификатору",
-                "operationId": "update-cars-by-id",
                 "parameters": [
                     {
                         "type": "integer",
@@ -249,11 +253,11 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:4141",
+	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Swagger API",
-	Description:      "ТЗ Go - апрель.",
+	Title:            "Swagger API tz_go",
+	Description:      "ТЗ Go - апрель.\nhttps://docs.google.com/document/u/0/d/1c0GEgi0svIsg14aNAfpTgPv9te9tcGoRmE4kngyD0ow/mobilebasic",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

@@ -1,15 +1,15 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "ТЗ Go - апрель.",
-        "title": "Swagger API",
+        "description": "ТЗ Go - апрель.\nhttps://docs.google.com/document/u/0/d/1c0GEgi0svIsg14aNAfpTgPv9te9tcGoRmE4kngyD0ow/mobilebasic",
+        "title": "Swagger API tz_go",
         "contact": {
+            "name": "Михаил Токмачев",
             "url": "https://t.me/Zatrasz",
             "email": "zatrasz@ya.ru"
         },
         "version": "1.0"
     },
-    "host": "localhost:4141",
     "basePath": "/",
     "paths": {
         "/cars": {
@@ -22,11 +22,10 @@
                     "application/json"
                 ],
                 "summary": "Получение данных с фильтрацией по всем полям и пагинацией",
-                "operationId": "get-cars-and-pagination",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Фильтр по названию автомобиля",
+                        "description": "Фильтр по данным автомобиля или владельца",
                         "name": "filter",
                         "in": "query"
                     },
@@ -52,6 +51,12 @@
                                 "$ref": "#/definitions/models.Car"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Ошибка при получении данных",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             },
@@ -64,7 +69,6 @@
                     "application/json"
                 ],
                 "summary": "Добавление нескольких автомобилей",
-                "operationId": "add-cars",
                 "parameters": [
                     {
                         "description": "Массив номеров регистрации автомобилей",
@@ -109,7 +113,6 @@
                     "application/json"
                 ],
                 "summary": "Изменение одного или нескольких полей по идентификатору",
-                "operationId": "update-cars-by-id",
                 "parameters": [
                     {
                         "type": "integer",

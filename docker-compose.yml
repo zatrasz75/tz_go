@@ -1,0 +1,25 @@
+version: '3.9'
+services:
+  tz:
+    env_file:
+      - .env
+    container_name: tz-go
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4141:4141"
+    depends_on:
+      - postgres
+  postgres:
+    env_file:
+      - .env
+    image: postgres:latest
+    container_name: tz-db
+    restart: always
+    ports:
+      - "49175:5432"
+
+
+# docker compose up -d
